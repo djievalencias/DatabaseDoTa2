@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Posisi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
     
 class PosisiController extends Controller
 { 
@@ -28,14 +27,15 @@ class PosisiController extends Controller
      */
     public function index(Request $request)
     {
-        $keyword = $request->keyword;
-        $posisis = posisi::where('nama_posisi','LIKE','%'.$keyword.'%')->paginate(5);
-        return view('posisis.index',compact('posisis'))
-            ->with('i', (request()->input('page', 1) - 1) * 5);
         // $keyword = $request->keyword;
-        // $posisis = DB::table('posisis')
-        // ->where('nama_posisi','LIKE','%'.$keyword.'%')
-        // ->paginate(5);
+        // $posisis = posisi::where('nama_posisi','LIKE','%'.$keyword.'%')->paginate(5);
+        // return view('posisis.index',compact('posisis'))
+        //     ->with('i', (request()->input('page', 1) - 1) * 5);
+        $keyword = $request->keyword;
+        $posisis = DB::table('posisis')
+                    ->where('nama_posisi','LIKE','%'.$keyword.'%')
+                    ->whereNull('deleted_at')
+                    ->paginate(5);
         return view('posisis.index',compact('posisis'))
             ->with('i', (request()->input('page', 1) - 1) * 5);
     }
@@ -63,13 +63,7 @@ class PosisiController extends Controller
             'nama_posisi' => 'required',
         ]);
     
-        DB::insert('INSERT INTO posisis(id_posisi, nama_posisi) VALUES (:id_posisi, :nama_posisi)',
-        [
-            'id_posisi' => $request->id_posisi,
-            'nama_posisi' => $request->nama_posisi,
-            
-        ]
-        );
+        Posisi::create($request->all());
     
         return redirect()->route('posisis.index')
                         ->with('success','Posisi created successfully.');
@@ -94,7 +88,7 @@ class PosisiController extends Controller
      */
     public function edit(Posisi $posisi)
     {
-        $data = DB::table('posisis')->where('id_posisi', $posisi)->first();
+        $posisis = DB::table('posisis')->where('id_posisi', $posisi)->first();
         return view('posisis.edit',compact('posisi'));
     }
     
@@ -132,32 +126,36 @@ class PosisiController extends Controller
      * @param  \App\Posisi  $posisi
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Posisi $posisi)
+    public function destroy($id)
     {
-        $posisi->delete();
+        DB::update('UPDATE posisis SET deleted_at = NOW() WHERE id_posisi = :id_posisi', ['id_posisi' => $id]);
     
         return redirect()->route('posisis.index')
-                        ->with('success','posisi deleted successfully');
+                        ->with('success','Posisi deleted successfully');
     }
     public function deletelist()
     {
-        $posisis = posisi::onlyTrashed()->paginate(5);
+        $posisis = DB::table('posisis')
+                    ->whereNotNull('deleted_at')
+                    ->paginate(5);
         return view('/posisis/trash',compact('posisis'))
             ->with('i', (request()->input('page', 1) - 1) * 5);
 
     }
     public function restore($id)
     {
-        $posisi = posisi::withTrashed()->where('id_posisi',$id)->restore();
+        DB::update('UPDATE posisis SET deleted_at = NULL WHERE id_posisi = :id_posisi', ['id_posisi' => $id]);
+    
         return redirect()->route('posisis.index')
-                        ->with('success','posisi Restored successfully');
+                        ->with('success','Posisi Restored successfully');
     }
     public function deleteforce($id)
     {
-        DB::delete('DELETE FROM posisis WHERE id_posisi = :id_posisi', ['id_posisi' => $id]);
+        DB::delete('DELETE FROM posisis WHERE id_posisi=:id_posisi', ['id_posisi' => $id]);
         return redirect()->route('posisis.index')
-                        ->with('success','posisi Deleted Permanently');
+                        ->with('success','Posisi Deleted Permanently');
     }
+
 }
 
 

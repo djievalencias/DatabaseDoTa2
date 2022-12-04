@@ -28,16 +28,17 @@ class HeroController extends Controller
      */
     public function index(Request $request)
     {
-        $keyword = $request->keyword;
-        $heros = Hero::where('nama_hero','LIKE','%'.$keyword.'%')->paginate(5);
-        return view('heros.index',compact('heros'))
-            ->with('i', (request()->input('page', 1) - 1) * 5);
         // $keyword = $request->keyword;
-        // $heros = DB::table('heroes')
-        //             ->where('nama_hero','LIKE','%'.$keyword.'%')
-        //             ->paginate(5);
+        // $heros = Hero::where('nama_hero','LIKE','%'.$keyword.'%')->paginate(5);
         // return view('heros.index',compact('heros'))
         //     ->with('i', (request()->input('page', 1) - 1) * 5);
+        $keyword = $request->keyword;
+        $heros = DB::table('heroes')
+                    ->where('nama_hero','LIKE','%'.$keyword.'%')
+                    ->whereNull('deleted_at')
+                    ->paginate(5);
+        return view('heros.index',compact('heros'))
+            ->with('i', (request()->input('page', 1) - 1) * 5);
     }
     
     /**
@@ -146,30 +147,34 @@ class HeroController extends Controller
     // }
 
 
-    public function destroy(Hero $hero)
+    public function destroy($id)
     {
-        $hero->delete();
+        DB::update('UPDATE heroes SET deleted_at = NOW() WHERE id_hero = :id_hero', ['id_hero' => $id]);
     
         return redirect()->route('heros.index')
                         ->with('success','Hero deleted successfully');
     }
     public function deletelist()
     {
-        $heros = Hero::onlyTrashed()->paginate(5);
+        $heros = DB::table('heroes')
+                    ->whereNotNull('deleted_at')
+                    ->paginate(5);
         return view('/heros/trash',compact('heros'))
             ->with('i', (request()->input('page', 1) - 1) * 5);
 
     }
     public function restore($id)
     {
-        $hero = Hero::withTrashed()->where('id_hero',$id)->restore();
+        DB::update('UPDATE heroes SET deleted_at = NULL WHERE id_hero = :id_hero', ['id_hero' => $id]);
+    
         return redirect()->route('heros.index')
                         ->with('success','Hero Restored successfully');
     }
-    public function deleteforce( $id)
+    public function deleteforce($id)
     {
         DB::delete('DELETE FROM heroes WHERE id_hero=:id_hero', ['id_hero' => $id]);
         return redirect()->route('heros.index')
                         ->with('success','Hero Deleted Permanently');
-    }   
+    }
+
  }

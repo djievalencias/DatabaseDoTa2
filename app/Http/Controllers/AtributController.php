@@ -27,14 +27,15 @@ class AtributController extends Controller
      */
     public function index(Request $request)
     {
-        $keyword = $request->keyword;
-        $atributs = atribut::where('nama_atribut','LIKE','%'.$keyword.'%')->paginate(5);
-        return view('atributs.index',compact('atributs'))
-            ->with('i', (request()->input('page', 1) - 1) * 5);
         // $keyword = $request->keyword;
-        // $atributs = DB::table('atributs')
-        //             ->where('nama_atribut','LIKE','%'.$keyword.'%')
-        //             ->paginate(5);
+        // $atributs = atribut::where('nama_atribut','LIKE','%'.$keyword.'%')->paginate(5);
+        // return view('atributs.index',compact('atributs'))
+        //     ->with('i', (request()->input('page', 1) - 1) * 5);
+        $keyword = $request->keyword;
+        $atributs = DB::table('atributs')
+                    ->where('nama_atribut','LIKE','%'.$keyword.'%')
+                    ->whereNull('deleted_at')
+                    ->paginate(5);
         return view('atributs.index',compact('atributs'))
             ->with('i', (request()->input('page', 1) - 1) * 5);
     }
@@ -125,23 +126,26 @@ class AtributController extends Controller
      * @param  \App\Atribut  $atribut
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Atribut $atribut)
+    public function destroy($id)
     {
-        $atribut->delete();
+        DB::update('UPDATE atributs SET deleted_at = NOW() WHERE id_atribut = :id_atribut', ['id_atribut' => $id]);
     
         return redirect()->route('atributs.index')
                         ->with('success','Atribut deleted successfully');
     }
     public function deletelist()
     {
-        $atributs = Atribut::onlyTrashed()->paginate(5);
+        $atributs = DB::table('atributs')
+                    ->whereNotNull('deleted_at')
+                    ->paginate(5);
         return view('/atributs/trash',compact('atributs'))
             ->with('i', (request()->input('page', 1) - 1) * 5);
 
     }
     public function restore($id)
     {
-        $atribut = Atribut::withTrashed()->where('id_atribut',$id)->restore();
+        DB::update('UPDATE atributs SET deleted_at = NULL WHERE id_atribut = :id_atribut', ['id_atribut' => $id]);
+    
         return redirect()->route('atributs.index')
                         ->with('success','Atribut Restored successfully');
     }
