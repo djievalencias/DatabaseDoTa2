@@ -21,7 +21,7 @@ use App\Http\Controllers\JoinController;
 */
 
 Route::get('/', function () {
-    return view('login');
+    return view('welcome');
 });
 
 Auth::routes();

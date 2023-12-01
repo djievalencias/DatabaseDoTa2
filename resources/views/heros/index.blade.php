@@ -51,7 +51,7 @@
                     @csrf
                     @method('DELETE')
                     @can('hero-delete')
-                    <button type="submit" class="btn btn-danger">Delete</button>
+                    <button type="submit" onclick="return confirm('yakin mau menghapus data?')" class="btn btn-danger">Delete</button>
                     @endcan
                 </form>
             </td>

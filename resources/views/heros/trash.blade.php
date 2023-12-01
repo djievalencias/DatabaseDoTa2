@@ -28,7 +28,7 @@
             <td>{{ $hero->id_posisi }}</td>
             <td>
                     <a class="btn btn-info" href="trash/{{ $hero->id_hero }}/restore">Restore</a>
-                    <a class="btn btn-danger" href="trash/{{ $hero->id_hero }}/forcedelete">Delete</a>
+                    <a class="btn btn-danger" onclick="return confirm('beneran yakin?')" href="trash/{{ $hero->id_hero }}/forcedelete">Delete</a>
             </td>
         </tr>
         @endforeach

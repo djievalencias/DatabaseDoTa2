@@ -41,7 +41,7 @@
             </div>
         </div>
     </form>
-    <p class="text-center text-primary"><small>Tutorial by LaravelTuts.com</small></p>
+   
 @endsection
 
 
